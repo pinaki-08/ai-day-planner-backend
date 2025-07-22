@@ -9,7 +9,7 @@ def analyze_product_url(url):
     Uses OpenAI API to analyze clothing product URL, extract details, find similar items, and list sales.
     """
     # Use ScraperAPI to extract product info from the given URL
-    scraperapi_key = "0febe70b36da31f6808b84053afe8c15"
+    scraperapi_key = ""
     api_url = f"https://api.scraperapi.com/?api_key={scraperapi_key}&url={url}"
     try:
         response = requests.get(api_url)
