@@ -13,6 +13,7 @@ def test_analyze_product_url_valid():
     </div>
     """
     
+    from unittest.mock import ANY
     with patch('agent.requests.get') as mock_get:
         mock_response = MagicMock()
         mock_response.text = mock_html
@@ -26,7 +27,7 @@ def test_analyze_product_url_valid():
         assert "similar_products" in result
         mock_get.assert_called_once_with(
             test_url,
-            headers={'User-Agent': pytest.ANY}
+            headers={'User-Agent': ANY}
         )
 
 def test_analyze_product_url_invalid():

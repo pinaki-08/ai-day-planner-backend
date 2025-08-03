@@ -31,21 +31,35 @@ def analyze_product_url(url):
             }
         except Exception:
             product_info = {}
-        # Find similar products (simulate by finding product links)
-        links = set()
-        for a in soup.find_all("a", href=True):
-            href = a["href"]
-            text = a.get_text().strip()
-            if (
-                href.startswith("http") and
-                "product" in href.lower() and
-                len(text) > 2 and
-                not any(x in href for x in ["facebook", "twitter", "instagram", "pinterest", "cart", "login", "signup"])
-            ):
-                links.add(href)
-        similar_products = [{"url": l} for l in list(links)[:5]]
+
+        # Find similar products: Prefer .similar-products section if present
+        similar_products = []
+        similar_section = soup.find(class_="similar-products")
+        if similar_section:
+            for prod in similar_section.find_all("a", href=True):
+                href = prod["href"]
+                text = prod.get_text().strip()
+                price_tag = prod.find_next("span", class_="price")
+                price = price_tag.get_text(strip=True) if price_tag else None
+                if len(text) > 2:
+                    similar_products.append({"name": text, "url": href, "price": price})
+        else:
+            # fallback: all product links
+            links = set()
+            for a in soup.find_all("a", href=True):
+                href = a["href"]
+                text = a.get_text().strip()
+                if (
+                    href.startswith("http") and
+                    "product" in href.lower() and
+                    len(text) > 2 and
+                    not any(x in href for x in ["facebook", "twitter", "instagram", "pinterest", "cart", "login", "signup"])
+                ):
+                    links.add(href)
+            similar_products = [{"url": l} for l in list(links)[:5]]
+
         # If no product info and no similar products, treat as parsing error
-        if not product_info["name"] and not similar_products:
+        if not product_info.get("name") and not similar_products:
             return {
                 "error": "Failed to parse product information",
                 "similar_products": [],
