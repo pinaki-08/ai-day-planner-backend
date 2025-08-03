@@ -1,0 +1,71 @@
+name: Kubernetes Deployment Test
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'k8s/**'
+      - 'Dockerfile'
+      - '.github/workflows/k8s-test.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'k8s/**'
+      - 'Dockerfile'
+      - '.github/workflows/k8s-test.yml'
+
+jobs:
+  k8s-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+
+    - name: Build Docker image
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        push: false
+        tags: fashion-deal-recommender:test
+        load: true
+
+    - name: Set up Minikube
+      uses: medyagh/setup-minikube@master
+
+    - name: Test Kubernetes deployment
+      run: |
+        # Wait for Minikube to be ready
+        minikube status
+        eval $(minikube docker-env)
+        
+        # Create test namespace
+        kubectl create namespace test-fashion-recommender
+        
+        # Create dummy secret for testing
+        kubectl create secret generic scraper-api-secret \
+          --from-literal=api-key='dummy-key' \
+          -n test-fashion-recommender
+        
+        # Apply ConfigMap
+        kubectl apply -f k8s/configmap.yaml -n test-fashion-recommender
+        
+        # Apply deployment and service
+        kubectl apply -f k8s/deployment.yaml -n test-fashion-recommender
+        kubectl apply -f k8s/service.yaml -n test-fashion-recommender
+        
+        # Wait for deployment to be ready
+        kubectl wait --for=condition=available --timeout=300s deployment/fashion-deal-recommender -n test-fashion-recommender
+        
+        # Get deployment status
+        kubectl get pods -n test-fashion-recommender
+        
+        # Test the service
+        minikube service fashion-deal-recommender -n test-fashion-recommender --url | xargs curl -s -o /dev/null -w "%{http_code}"
+
+    - name: Cleanup
+      if: always()
+      run: |
+        kubectl delete namespace test-fashion-recommender --ignore-not-found=true
