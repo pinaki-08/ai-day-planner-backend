@@ -1,1 +1,1 @@
-# ai-day-planner-backend
+# ai-fashion-deal-recommender
