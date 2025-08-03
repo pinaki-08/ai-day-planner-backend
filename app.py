@@ -1,50 +1,68 @@
-# Default route to show backend is running
+# Fashion Deal Recommender Backend
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from tinydb import TinyDB
-from agent import get_ai_suggestion, analyze_product_url
+from agent import analyze_product_url
 
 app = Flask(__name__)
 CORS(app)
-db = TinyDB('db.json')
+db = TinyDB('products.json')  # Store product search history
 
 @app.route("/")
 def index():
-    return "AI Day Planner Backend is running."
+    return "Fashion Deal Recommender Backend is running."
 
-@app.route("/add-task", methods=["POST"])
-def add_task():
-    task = request.json.get("task")
-    db.insert({"task": task})
-    return jsonify({"message": "Task added"})
+@app.route("/recent-searches", methods=["GET"])
+def get_recent_searches():
+    searches = db.all()
+    return jsonify({"searches": searches[-10:]})  # Return last 10 searches
 
-@app.route("/tasks", methods=["GET"])
-def get_tasks():
-    tasks = db.all()
-    return jsonify({"tasks": tasks})
-
-@app.route("/suggest", methods=["GET"])
-def suggest_tasks():
-    tasks = [t["task"] for t in db.all()]
-    suggestion = get_ai_suggestion(tasks)
-    return jsonify({"suggestion": suggestion})
-
-@app.route("/clear", methods=["POST"])
-def clear_tasks():
-    db.truncate()
-    return jsonify({"message": "All tasks cleared."})
+@app.route("/save-search", methods=["POST"])
+def save_search():
+    data = request.json
+    if not data or "url" not in data:
+        return jsonify({"error": "Invalid request data"}), 400
+    
+    search_data = {
+        "url": data["url"],
+        "timestamp": request.json.get("timestamp"),
+        "product_info": request.json.get("product_info", {})
+    }
+    db.insert(search_data)
+    return jsonify({"message": "Search saved successfully"})
 
 
-# New route for clothing product analysis
 @app.route("/analyze-product", methods=["POST"])
 def analyze_product():
+    """Analyze a product URL and find similar items with better deals."""
     data = request.json
     url = data.get("url")
     if not url:
-        return jsonify({"error": "No URL provided."}), 400
-    result = analyze_product_url(url)
-    return jsonify(result)
+        return jsonify({"error": "No URL provided"}), 400
+    
+    try:
+        # Analyze the product and find similar items
+        result = analyze_product_url(url)
+        
+        # Save the search if analysis was successful
+        if not result.get("error"):
+            search_data = {
+                "url": url,
+                "timestamp": data.get("timestamp"),
+                "product_info": result.get("product_info", {})
+            }
+            db.insert(search_data)
+        
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": f"Analysis failed: {str(e)}"}), 500
+
+@app.route("/clear-history", methods=["POST"])
+def clear_history():
+    """Clear the search history."""
+    db.truncate()
+    return jsonify({"message": "Search history cleared"})
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=3000, debug=True)

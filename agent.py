@@ -36,9 +36,3 @@ def analyze_product_url(url):
         }
     except Exception as e:
         return {"error": str(e)}
-
-
-
-def get_ai_suggestion(tasks):
-    prompt = f"Given today's tasks: {tasks}, suggest how to organize them for better productivity."
-    return "AI suggestion functionality has been removed."
