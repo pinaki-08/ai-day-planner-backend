@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fashion-deal-recommender-config
+data:
+  # Add any configuration parameters here
+  MAX_SEARCHES: "10"
+  DB_FILE: "products.json"
