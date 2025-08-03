@@ -22,9 +22,9 @@ def analyze_product_url(url):
         html = response.text
         soup = BeautifulSoup(html, "html.parser")
         
-        # Extract product info
-        product_name_elem = soup.find("h1", class_="product-name")
-        product_price_elem = soup.find("span", class_="price")
+        # Extract product info - look for elements with both tag and class, or just class
+        product_name_elem = soup.find(class_="product-name")
+        product_price_elem = soup.find(class_="price")
         
         # Set product info
         product_info = {
