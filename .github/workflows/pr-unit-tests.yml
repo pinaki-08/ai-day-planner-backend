@@ -31,12 +31,4 @@ jobs:
       env:
         SCRAPER_API_KEY: ${{ secrets.SCRAPER_API_KEY }}
       run: |
-        pytest --cov=./ --cov-report=xml
-
-    - name: Upload coverage report
-      uses: codecov/codecov-action@v3
-      with:
-        file: ./coverage.xml
-        flags: unittests
-        name: codecov-umbrella
-        fail_ci_if_error: true
+        pytest --cov=./ --cov-report=xml --cov-report=term
