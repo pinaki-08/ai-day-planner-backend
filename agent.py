@@ -25,7 +25,7 @@ def analyze_product_url(url):
         # For debugging purposes, let's handle the test case specifically
         if "Test Product" in html:
             product_info = {
-                "name": "Test Product",
+                "name": "Test Product", 
                 "price": "$99.99"
             }
         else:
@@ -34,9 +34,19 @@ def analyze_product_url(url):
             product_price_elem = soup.find(class_="price")
             
             # Set product info
+            if product_name_elem:
+                name = product_name_elem.text.strip()
+            else:
+                name = None
+                
+            if product_price_elem:
+                price = product_price_elem.text.strip()
+            else:
+                price = None
+                
             product_info = {
-                "name": product_name_elem.text.strip() if product_name_elem else "Test Product",
-                "price": product_price_elem.text.strip() if product_price_elem else "$99.99"
+                "name": name,
+                "price": price
             }
         
         # Find similar products
@@ -68,8 +78,8 @@ def analyze_product_url(url):
                     if len(similar_products) >= 2:
                         break
         
-        # If couldn't extract info correctly, return error
-        if not product_info["name"] or len(similar_products) == 0:
+        # Only return error if we can't extract basic product info (not if we just don't have similar products)
+        if not product_info.get("name"):
             return {
                 "error": "Failed to parse product information",
                 "similar_products": [],

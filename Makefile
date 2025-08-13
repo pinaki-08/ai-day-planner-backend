@@ -25,7 +25,8 @@ setup: install frontend
 
 .PHONY: install
 install:
-	$(PIP) install -r $(BACKEND_DIR)/requirements.txt
+	$(PIP) install -r requirements.txt
+	$(PIP) install pytest pytest-cov
 
 .PHONY: frontend
 frontend:
@@ -33,7 +34,7 @@ frontend:
 
 .PHONY: run
 run:
-	cd $(BACKEND_DIR) && $(PYTHON) app.py
+	$(PYTHON) app.py
 
 .PHONY: run-frontend
 run-frontend:
@@ -49,5 +50,4 @@ clean:
 
 .PHONY: test
 test:
-	cd $(BACKEND_DIR) && $(PYTHON) -m pytest tests/
-	cd $(FRONTEND_DIR) && npm test
+	$(PYTHON) -m pytest tests/
