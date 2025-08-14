@@ -19,6 +19,8 @@ help:
 	@echo "  make frontend  - Install and run frontend"
 	@echo "  make clean     - Clean up generated files"
 	@echo "  make test      - Run tests"
+	@echo "  make lint      - Run code linting"
+	@echo "  make format    - Format code with black"
 
 .PHONY: setup
 setup: install frontend
@@ -26,7 +28,7 @@ setup: install frontend
 .PHONY: install
 install:
 	$(PIP) install -r requirements.txt
-	$(PIP) install pytest pytest-cov
+	$(PIP) install pytest pytest-cov flake8 black isort
 
 .PHONY: frontend
 frontend:
@@ -51,3 +53,13 @@ clean:
 .PHONY: test
 test:
 	$(PYTHON) -m pytest tests/
+
+.PHONY: lint
+lint:
+	$(PYTHON) -m flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+	$(PYTHON) -m flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+.PHONY: format
+format:
+	$(PYTHON) -m black .
+	$(PYTHON) -m isort .
